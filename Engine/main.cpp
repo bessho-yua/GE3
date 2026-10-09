@@ -751,6 +751,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	//WindowsAPI初期化処理
 	//
 
+	CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 
 	SetUnhandledExceptionFilter(ExportDump);
 
@@ -2023,6 +2024,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 						"Light Intensity",
 						&directionalLightData->intensity,
 						0.0f,
+						5.0f);
 				}
 
 				ImGui::End();
@@ -2399,7 +2401,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 						? &vertexBufferView
 						: &vertexBufferViewObject;
 
-					UINT vertexCount = isSphere ? kSphereVertexCount : static_cast<UINT>(modelData.vertices.size());
 
 					commandList->IASetVertexBuffers(
 						0,
