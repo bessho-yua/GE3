@@ -25,7 +25,6 @@
 #include <cmath>
 #include <cstring>
 
-
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
@@ -1931,7 +1930,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 						"Light Intensity",
 						&directionalLightData->intensity,
 						0.0f,
-						5.0f);
+						6.0f);
 				}
 
 				ImGui::End();
