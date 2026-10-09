@@ -1687,6 +1687,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		{0.0f,0.0f,0.0f},
 		{0.0f,0.0f,0.0f},
 	};
+
+	//assert(false && "assertのテスト");
+
 	materialDataSprite->enbleLighting = false;
 
 	SceneType currentScene = SceneType::kObjectSprite;
