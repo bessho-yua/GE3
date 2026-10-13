@@ -159,12 +159,13 @@ enum class SceneType {
 	kSphere,
 	kMultipleModels,
 	kUtahTeapot,
+	kFence,
 };
 
 enum class BlendMode {
 	kNormal,
 	kAdd,
-	kSubtract
+	kSubtract,
 };
 
 constexpr const char* kSceneNames[] = {
@@ -172,6 +173,7 @@ constexpr const char* kSceneNames[] = {
 	"Sphere Scene",
 	"Multiple Models Scene",
 	"Utah Teapot Scene",
+	"Fence",
 };
 
 constexpr const char* blendModeNames[] = {
@@ -1179,6 +1181,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	//
 	//グラフィックパイプライン
 	//
+	
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
 	graphicsPipelineStateDesc.pRootSignature = rootSignature.Get(); // RootSignature
 	graphicsPipelineStateDesc.InputLayout = inputLayoutDesc; // InputLayout
@@ -1283,8 +1286,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		modelData.vertices.size()
 	);
 
-	ModelData teapotModelData =
-		LoadObjFile("resources", "teapot.obj");
+	ModelData teapotModelData = LoadObjFile("resources", "teapot.obj");
 
 	assert(!teapotModelData.vertices.empty());
 
@@ -1320,6 +1322,43 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		teapotModelData.vertices.data(),
 		sizeof(VertexData) *
 		teapotModelData.vertices.size());
+
+	ModelData fenceModelData = LoadObjFile("resources", "fence.obj");
+
+	assert(!fenceModelData.vertices.empty());
+
+	Microsoft::WRL::ComPtr<ID3D12Resource>
+		vertexResourceFence =
+		CreateBufferResource(
+			device,
+			sizeof(VertexData) *
+			fenceModelData.vertices.size());
+
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewFence{};
+
+	vertexBufferViewFence.BufferLocation =
+		vertexResourceFence->GetGPUVirtualAddress();
+
+	vertexBufferViewFence.SizeInBytes =
+		static_cast<UINT>(
+			sizeof(VertexData) *
+			fenceModelData.vertices.size());
+
+	vertexBufferViewFence.StrideInBytes =
+		sizeof(VertexData);
+
+	VertexData* vertexDataFence = nullptr;
+
+	vertexResourceFence->Map(
+		0,
+		nullptr,
+		reinterpret_cast<void**>(&vertexDataFence));
+
+	std::memcpy(
+		vertexDataFence,
+		fenceModelData.vertices.data(),
+		sizeof(VertexData)*
+		fenceModelData.vertices.size());
 
 	const uint32_t kSubdivision = 16;
 	const uint32_t kSphereVertexCount = kSubdivision * kSubdivision * 6;
@@ -2045,6 +2084,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 				ImGui::End();
 			}
+			else if (currentScene == SceneType::kFence) {
+				
+				ImGui::End();
+			}
 #endif
 
 			//DirectX毎フレーム処理
@@ -2250,7 +2293,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 					wvpResourceObject->GetGPUVirtualAddress());
 				commandList->SetGraphicsRootDescriptorTable(
 					2,
-					textureSrvHandleGPU);
+					textureSrvHandleGPU2);
 				commandList->SetGraphicsRootConstantBufferView(
 					3,
 					directionalLightResource->GetGPUVirtualAddress());
