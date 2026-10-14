@@ -25,7 +25,6 @@
 #include <cmath>
 #include <cstring>
 
-
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
