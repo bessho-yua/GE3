@@ -25,7 +25,6 @@
 #include <cmath>
 #include <cstring>
 
-
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
@@ -751,6 +750,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	//WindowsAPI初期化処理
 	//
 
+	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+	assert(SUCCEEDED(hr));
 
 	SetUnhandledExceptionFilter(ExportDump);
 
@@ -819,6 +820,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	//DXGIファクトリーの生成
 	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory = nullptr;
+	HRESULT hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory));
 	assert(SUCCEEDED(hr));
 	Microsoft::WRL::ComPtr<IDXGIAdapter4> useAdapter = nullptr;
 	for (UINT i = 0; dxgiFactory->EnumAdapterByGpuPreference(i, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&useAdapter)) !=
@@ -1249,6 +1251,13 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	assert(!modelData.vertices.empty());
 
 	// OBJ用頂点リソース
+	Microsoft::WRL::ComPtr<ID3D12Resource>
+		vertexResourceObject =
+		CreateBufferResource(
+			device,
+			sizeof(VertexData) *
+			modelData.vertices.size()
+		);
 
 	// OBJ用頂点バッファビュー
 	D3D12_VERTEX_BUFFER_VIEW
@@ -1258,6 +1267,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		vertexResourceObject->GetGPUVirtualAddress();
 
 	vertexBufferViewObject.SizeInBytes =
+		static_cast<UINT>(
+			sizeof(VertexData) *
+			modelData.vertices.size()
+			);
 
 	vertexBufferViewObject.StrideInBytes =
 		sizeof(VertexData);
@@ -1266,6 +1279,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	VertexData* vertexDataObject = nullptr;
 
 	vertexResourceObject->Map(
+		0,
+		nullptr,
+		reinterpret_cast<void**>(
+			&vertexDataObject
+			)
+	);
 
 	std::memcpy(
 		vertexDataObject,
@@ -1274,11 +1293,16 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		modelData.vertices.size()
 	);
 
+	ModelData teapotModelData =
+		LoadObjFile("resources", "teapot.obj");
 
 	assert(!teapotModelData.vertices.empty());
 
 	Microsoft::WRL::ComPtr<ID3D12Resource>
 		vertexResourceTeapot =
+		CreateBufferResource(
+			device,
+			sizeof(VertexData) *
 			teapotModelData.vertices.size());
 
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewTeapot{};
@@ -1476,11 +1500,13 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	// Sprite用のTransformationMatrix用のリソースを作る
 	// Sprite用のTransformationMatrix用リソース
+	Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResourceSprite = CreateBufferResource(device, sizeof(TransformationMatrix));
 
 	// 書き込み用ポインタ
 	TransformationMatrix* transformationMatrixDataSprite = nullptr;
 
 	// 書き込むためのアドレスを取得
+	transformationMatrixResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixDataSprite));
 
 	// 初期値
 	transformationMatrixDataSprite->WVP = MakeIdentity4x4();
@@ -1557,128 +1583,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			}
 		}
 	}
-
-	//ここまで球
-
-	// OBJ用TransformationMatrix
-	Microsoft::WRL::ComPtr<ID3D12Resource>
-		wvpResourceObject =
-		CreateBufferResource(
-			device,
-			sizeof(TransformationMatrix)
-		);
-
-	TransformationMatrix* wvpDataObject =
-		nullptr;
-
-	wvpResourceObject->Map(
-		0,
-		nullptr,
-		reinterpret_cast<void**>(
-			&wvpDataObject
-			)
-	);
-
-	wvpDataObject->WVP = MakeIdentity4x4();
-	wvpDataObject->World = MakeIdentity4x4();
-
-	// 球体用TransformationMatrix
-	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource =
-		CreateBufferResource(device, sizeof(TransformationMatrix));
-
-	TransformationMatrix* wvpData = nullptr;
-
-	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
-
-	wvpData->WVP = MakeIdentity4x4();
-	wvpData->World = MakeIdentity4x4();
-
-	Microsoft::WRL::ComPtr<ID3D12Resource>
-		wvpResourceTeapot =
-		CreateBufferResource(
-			device,
-			sizeof(TransformationMatrix));
-
-	TransformationMatrix* wvpDataTeapot = nullptr;
-
-	wvpResourceTeapot->Map(
-		0,
-		nullptr,
-		reinterpret_cast<void**>(&wvpDataTeapot));
-
-	wvpDataTeapot->WVP = MakeIdentity4x4();
-	wvpDataTeapot->World = MakeIdentity4x4();
-
-	Microsoft::WRL::ComPtr<ID3D12Resource>
-		materialResourceTeapot =
-		CreateBufferResource(device, sizeof(Material));
-
-	Material* materialDataTeapot = nullptr;
-
-	materialResourceTeapot->Map(
-		0,
-		nullptr,
-		reinterpret_cast<void**>(&materialDataTeapot));
-
-	*materialDataTeapot =
-		Material{ {1.0f, 1.0f, 1.0f, 1.0f}, 1 };
-
-	materialDataTeapot->uvTransform =
-		MakeIdentity4x4();
-
-	//Sprite用のマテリアルリソースを作る
-	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceSprite = CreateBufferResource(device, sizeof(Material));
-
-	// OBJ用マテリアル
-	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceObject = CreateBufferResource(device, sizeof(Material));
-
-
-	// 球体用マテリアル
-	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource = CreateBufferResource(device, sizeof(Material));
-
-	//ライト用のリソースを作る。
-	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource = CreateBufferResource(device, sizeof(DirectionalLight));
-
-	// マテリアルにデータを書き込む
-	Material* materialData = nullptr;
-
-	// マテリアルにデータを書き込む
-	Material* materialDataSprite = nullptr;
-
-	// OBJ用マテリアルデータ
-	Material* materialDataObject = nullptr;
-
-	//ライトのデータ
-	DirectionalLight* directionalLightData = nullptr;
-
-	// 書き込むためのアドレスを取得
-	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
-
-	// 書き込むためのアドレスを取得(Lighting用)
-	materialResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&materialDataSprite));
-
-	materialResourceObject->Map(0, nullptr, reinterpret_cast<void**>(&materialDataObject));
-
-	materialData->uvTransform = MakeIdentity4x4();
-
-	materialDataSprite->uvTransform = MakeIdentity4x4();
-
-	materialDataObject->uvTransform = MakeIdentity4x4();
-
-	directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
-
-	// 球体の色
-	materialData->color = { 1.0f,1.0f,1.0f,1.0f };
-
-	// 球体はLightingを有効にする
-	materialData->enbleLighting = 1;
-
-	// Sprite用マテリアル
-	*materialDataSprite = Material{ {1.0f, 1.0f, 1.0f, 1.0f}, 0 };
-
-	// OBJ用マテリアル
-	*materialDataObject = Material{ {1.0f, 1.0f, 1.0f, 1.0f}, 1 };
-	materialDataObject->uvTransform = MakeIdentity4x4();
 
 	// Textureを読んで転送する
 	DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
@@ -2175,7 +2079,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 					graphicsPipelineStateAdd.Get()
 				);
 				break;
-				
+
 			case BlendMode::kSubtract:
 				commandList->SetPipelineState(
 					graphicsPipelineStateSubtract.Get()
@@ -2314,6 +2218,27 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			switch (currentScene) {
 			case SceneType::kObjectSprite:
 				// 1番目のシーン：plane.objを描画
+				commandList->IASetVertexBuffers(
+					0,
+					1,
+					&vertexBufferViewObject);
+				commandList->SetGraphicsRootConstantBufferView(
+					0,
+					materialResourceObject->GetGPUVirtualAddress());
+				commandList->SetGraphicsRootConstantBufferView(
+					1,
+					wvpResourceObject->GetGPUVirtualAddress());
+				commandList->SetGraphicsRootDescriptorTable(
+					2,
+					textureSrvHandleGPU);
+				commandList->SetGraphicsRootConstantBufferView(
+					3,
+					directionalLightResource->GetGPUVirtualAddress());
+				commandList->DrawInstanced(
+					static_cast<UINT>(modelData.vertices.size()),
+					1,
+					0,
+					0);
 
 				// 1番目のシーン：Spriteを描画
 				commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
@@ -2332,28 +2257,93 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			case SceneType::kSphere:
 				// 2番目のシーン：球体を描画
 				commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+				commandList->SetGraphicsRootConstantBufferView(
+					0,
+					materialResource->GetGPUVirtualAddress());
+				commandList->SetGraphicsRootConstantBufferView(
+					1,
+					wvpResource->GetGPUVirtualAddress());
+				commandList->SetGraphicsRootDescriptorTable(
+					2,
+					textureSrvHandleGPU);
+				commandList->SetGraphicsRootConstantBufferView(
+					3,
+					directionalLightResource->GetGPUVirtualAddress());
+				commandList->DrawInstanced(
+					kSphereVertexCount,
+					1,
+					0,
+					0);
 				break;
 			case SceneType::kMultipleModels:
 
 				for (MultipleModelObject& object : multipleModels) {
+					bool isSphere =
+						object.type == MultipleModelType::kSphere;
 
+					const D3D12_VERTEX_BUFFER_VIEW* bufferView =
+						isSphere
+						? &vertexBufferView
+						: &vertexBufferViewObject;
 
+					UINT vertexCount =
+						isSphere
+						? kSphereVertexCount
+						: static_cast<UINT>(
+							modelData.vertices.size());
 
+					commandList->IASetVertexBuffers(
+						0,
+						1,
+						bufferView);
 
+					commandList->SetGraphicsRootConstantBufferView(
+						0,
+						object.materialResource->GetGPUVirtualAddress());
 
+					commandList->SetGraphicsRootConstantBufferView(
+						1,
+						object.wvpResource->GetGPUVirtualAddress());
 
+					commandList->SetGraphicsRootDescriptorTable(
+						2,
+						textureSrvHandleGPU);
 
+					commandList->SetGraphicsRootConstantBufferView(
+						3,
+						directionalLightResource->GetGPUVirtualAddress());
 
+					commandList->DrawInstanced(
+						vertexCount,
+						1,
+						0,
+						0);
 				}
 
 				break;
 			case SceneType::kUtahTeapot:
 
+				commandList->IASetVertexBuffers(
+					0,
+					1,
+					&vertexBufferViewTeapot);
 
+				commandList->SetGraphicsRootConstantBufferView(
+					0,
+					materialResourceTeapot->GetGPUVirtualAddress());
 
+				commandList->SetGraphicsRootConstantBufferView(
+					1,
+					wvpResourceTeapot->GetGPUVirtualAddress());
 
 				// uvChecker.pngを使用
+				commandList->SetGraphicsRootDescriptorTable(
+					2,
+					textureSrvHandleGPU);
 
+				commandList->SetGraphicsRootConstantBufferView(
+					3,
+					directionalLightResource->GetGPUVirtualAddress());
 
 				commandList->DrawInstanced(static_cast<UINT>(teapotModelData.vertices.size()), 1, 0, 0);
 
