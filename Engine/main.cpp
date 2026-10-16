@@ -1276,7 +1276,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	std::memcpy(
 		vertexDataObject,
 		modelData.vertices.data(),
-		sizeof(VertexData)*
+		sizeof(VertexData) *
 		modelData.vertices.size()
 	);
 
@@ -1307,35 +1307,113 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	materialDataObject->uvTransform = MakeIdentity4x4();
 
+	// OBJ用Transform
+	Transform transformObject{
+		{5.0f, 5.0f, 5.0f},
+		{0.0f, 0.0f, 0.0f},
+		{0.0f, 0.0f, 0.0f}
+	};
+
+	//--------------------
+	//Sprite
+	//--------------------
+
+	//頂点数
+	const uint32_t kSubdivision = 16;
+	const uint32_t kSphereVertexCount = kSubdivision * kSubdivision * 6;
+
+	//Resource作成の関数
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource =
+		CreateBufferResource(device, sizeof(VertexData) * kSphereVertexCount);
+
+	// 頂点バッファビューを作成する
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+	// リソースの先頭のアドレスから使う
+	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
+
+	// 使用するリソースのサイズは頂点3つ分のサイズ
+	vertexBufferView.SizeInBytes = sizeof(VertexData) * kSphereVertexCount;
+
+	// 1頂点あたりのサイズ
+	vertexBufferView.StrideInBytes = sizeof(VertexData);
+	// Sprite用の頂点リソースを作る
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSprite = CreateBufferResource(device, sizeof(VertexData) * 4);
+	// Sprite用の頂点バッファビューを作る
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSprite{};
+	// リソースの先頭のアドレスから使う
+	vertexBufferViewSprite.BufferLocation = vertexResourceSprite->GetGPUVirtualAddress();
+	// 使用するリソースのサイズは頂点4つ分
+	vertexBufferViewSprite.SizeInBytes = sizeof(VertexData) * 4;
+	// 1頂点あたりのサイズ
+	vertexBufferViewSprite.StrideInBytes = sizeof(VertexData);
+	// Sprite用の頂点データを書き込む
+	VertexData* vertexDataSprite = nullptr;
+
+	vertexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataSprite));
+
+	//Sprite用のマテリアルリソースを作る
+	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceSprite =
+		CreateBufferResource(device, sizeof(Material));
+	// マテリアルにデータを書き込む
+	Material* materialDataSprite = nullptr;
+
+	// 書き込むためのアドレスを取得
+	materialResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&materialDataSprite));
+
+	// Sprite用マテリアル
+	*materialDataSprite = Material{ {1.0f, 1.0f, 1.0f, 1.0f}, 0 };
+
+	materialDataSprite->uvTransform = MakeIdentity4x4();
+
+	// CPUで動かす用のTransformを作る
+	Transform transformSprite{
+		{ 1.0f, 1.0f, 1.0f },
+		{ 0.0f, 0.0f, 0.0f },
+		{ 0.0f, 0.0f, 0.0f }
+	};
+
+	Transform uvTransformSprite{
+		{1.0f,1.0f,1.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,0.0f},
+	};
+
 	//--------------------
 	//Sphere
 	//--------------------
 
 	// 球体用TransformationMatrix
-	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource =
+	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResourceSphere =
 		CreateBufferResource(device, sizeof(TransformationMatrix));
 
-	TransformationMatrix* wvpData = nullptr;
+	TransformationMatrix* wvpDataSphere = nullptr;
 
-	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
+	wvpResourceSphere->Map(0, nullptr, reinterpret_cast<void**>(&wvpDataSphere));
 
-	wvpData->WVP = MakeIdentity4x4();
-	wvpData->World = MakeIdentity4x4();
+	wvpDataSphere->WVP = MakeIdentity4x4();
+
+	wvpDataSphere->World = MakeIdentity4x4();
 
 	// 球体用マテリアル
-	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource =
+	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceSphere =
 		CreateBufferResource(device, sizeof(Material));
 
 	// 球体にデータを書き込む
-	Material* materialData = nullptr;
+	Material* materialDataSphere = nullptr;
 
 	// 書き込むためのアドレスを取得
-	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
+	materialResourceSphere->Map(0, nullptr, reinterpret_cast<void**>(&materialDataSphere));
 
 	// 球体
-	*materialData = Material{ {1.0f, 1.0f, 1.0f, 1.0f}, 1 };
+	*materialDataSphere = Material{ {1.0f, 1.0f, 1.0f, 1.0f}, 1 };
 
-	materialData->uvTransform = MakeIdentity4x4();
+	materialDataSphere->uvTransform = MakeIdentity4x4();
+
+	Transform transformShere{
+		{1.0f, 1.0f, 1.0f},
+		{0.0f, 0.0f, 0.0f},
+		{0.0f, 0.0f, 0.0f}
+	};
 
 	//--------------------
 	//Teapot
@@ -1347,7 +1425,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	Microsoft::WRL::ComPtr<ID3D12Resource>
 		vertexResourceTeapot =
-		CreateBufferResource(device,sizeof(VertexData) *
+		CreateBufferResource(device, sizeof(VertexData) *
 			teapotModelData.vertices.size());
 
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewTeapot{};
@@ -1373,7 +1451,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	std::memcpy(
 		vertexDataTeapot,
 		teapotModelData.vertices.data(),
-		sizeof(VertexData)*
+		sizeof(VertexData) *
 		teapotModelData.vertices.size());
 
 	//Teapot用TransformationMatrix
@@ -1399,11 +1477,17 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	materialDataTeapot->uvTransform = MakeIdentity4x4();
 
+	Transform transformTeapot{
+	{3.0f, 3.0f, 3.0f},
+	{0.0f, 0.0f, 0.0f},
+	{0.0f, 0.0f, 0.0f}
+	};
+
 	//--------------------
 	//Fence
 	//--------------------
 
-	ModelData fenceModelData = LoadObjFile("resources", "fence.obj");
+	ModelData fenceModelData = LoadObjFile("resources/fence", "fence.obj");
 
 	assert(!fenceModelData.vertices.empty());
 
@@ -1437,66 +1521,51 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	std::memcpy(
 		vertexDataFence,
 		fenceModelData.vertices.data(),
-		sizeof(VertexData)*
+		sizeof(VertexData) *
 		fenceModelData.vertices.size());
 
+	//Fence用TransformationMatrix
+	Microsoft::WRL::ComPtr<ID3D12Resource>wvpResourceFence =
+		CreateBufferResource(device, sizeof(TransformationMatrix));
 
-	//Sprite用のマテリアルリソースを作る
-	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceSprite =
+	TransformationMatrix* wvpDataFence = nullptr;
+
+	wvpResourceFence->Map(0, nullptr, reinterpret_cast<void**>(&wvpDataFence));
+
+	wvpDataFence->WVP = MakeIdentity4x4();
+	wvpDataFence->World = MakeIdentity4x4();
+
+	// Fence用マテリアル
+	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceFence =
 		CreateBufferResource(device, sizeof(Material));
+
+	// Fenceにデータを書き込む
+	Material* materialDataFence = nullptr;
+
+	// 書き込むためのアドレスを取得
+	materialResourceFence->Map(0, nullptr, reinterpret_cast<void**>(&materialDataFence));
+
+	// Fence
+	*materialDataFence = Material{ {1.0f, 1.0f, 1.0f, 1.0f}, 1 };
+
+	materialDataFence->uvTransform = MakeIdentity4x4();
+
+	Transform transformFence{
+	{3.0f, 3.0f, 3.0f},
+	{-0.6f, 0.0f, 0.0f},
+	{-3.0f, 0.0f, 0.0f}
+	};
+
 
 	//ライト用のリソースを作る。
 	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource =
 		CreateBufferResource(device, sizeof(DirectionalLight));
 
-	// マテリアルにデータを書き込む
-	Material* materialDataSprite = nullptr;
-
 	//ライトのデータ
 	DirectionalLight* directionalLightData = nullptr;
 
-	// 書き込むためのアドレスを取得(Lighting用)
-	materialResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&materialDataSprite));
-
-	materialDataSprite->uvTransform = MakeIdentity4x4();
-
 	directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
 
-	// Sprite用マテリアル
-	*materialDataSprite = Material{ {1.0f, 1.0f, 1.0f, 1.0f}, 0 };
-
-	const uint32_t kSubdivision = 16;
-	const uint32_t kSphereVertexCount = kSubdivision * kSubdivision * 6;
-
-	//Resource作成の関数
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource =
-		CreateBufferResource(device, sizeof(VertexData) * kSphereVertexCount);
-
-	// 頂点バッファビューを作成する
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-	// リソースの先頭のアドレスから使う
-	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
-
-	// 使用するリソースのサイズは頂点3つ分のサイズ
-	vertexBufferView.SizeInBytes = sizeof(VertexData) * kSphereVertexCount;
-
-
-	// 1頂点あたりのサイズ
-	vertexBufferView.StrideInBytes = sizeof(VertexData);
-	// Sprite用の頂点リソースを作る
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSprite = CreateBufferResource(device, sizeof(VertexData) * 4);
-	// Sprite用の頂点バッファビューを作る
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSprite{};
-	// リソースの先頭のアドレスから使う
-	vertexBufferViewSprite.BufferLocation = vertexResourceSprite->GetGPUVirtualAddress();
-	// 使用するリソースのサイズは頂点4つ分
-	vertexBufferViewSprite.SizeInBytes = sizeof(VertexData) * 4;
-	// 1頂点あたりのサイズ
-	vertexBufferViewSprite.StrideInBytes = sizeof(VertexData);
-	// Sprite用の頂点データを書き込む
-	VertexData* vertexDataSprite = nullptr;
-
-	vertexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataSprite));
 
 	//音系
 	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
@@ -1558,13 +1627,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	// 初期値
 	transformationMatrixDataSprite->WVP = MakeIdentity4x4();
 	transformationMatrixDataSprite->World = MakeIdentity4x4();
-
-	// CPUで動かす用のTransformを作る
-	Transform transformSprite{
-		{ 1.0f, 1.0f, 1.0f },
-		{ 0.0f, 0.0f, 0.0f },
-		{ 0.0f, 0.0f, 0.0f }
-	};
 
 	VertexData* vertexData = nullptr;
 
@@ -1631,44 +1693,75 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		}
 	}
 
-	// Textureを読んで転送する
-	DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
-	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
-	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = CreateTextureResource(device, metadata);
-	UploadTextureData(textureResource, mipImages);
+	//--------------
+	//1つ目の画像
+	//--------------
 
-	// 2枚目Textureを読んで転送する
-	DirectX::ScratchImage mipImages2 = LoadTexture(modelData.material.textureFilePath);
-	const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
-	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource2 = CreateTextureResource(device, metadata2);
-	UploadTextureData(textureResource2, mipImages2);
+	// Textureを読んで転送する
+	DirectX::ScratchImage mipImagesPlane = LoadTexture(modelData.material.textureFilePath);
+	const DirectX::TexMetadata& metadataPlane = mipImagesPlane.GetMetadata();
+	Microsoft::WRL::ComPtr<ID3D12Resource> textureResourcePlane = CreateTextureResource(device, metadataPlane);
+	UploadTextureData(textureResourcePlane, mipImagesPlane);
 
 	// metaDataを基にSRVの設定
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	srvDesc.Format = metadata.format;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D; // 2Dテクスチャ
-	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
-
-	// metaDataを基にSRVの設定2
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2{};
-	srvDesc2.Format = metadata2.format;
-	srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D; // 2Dテクスチャ
-	srvDesc2.Texture2D.MipLevels = UINT(metadata2.mipLevels);
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDescPlane{};
+	srvDescPlane.Format = metadataPlane.format;
+	srvDescPlane.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDescPlane.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D; // 2Dテクスチャ
+	srvDescPlane.Texture2D.MipLevels = UINT(metadataPlane.mipLevels);
 
 	// SRVを作成するDescriptorHeapの場所を決める
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 1);
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 1);
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPUPlane = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 1);
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPUPlane = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 1);
 
 	// SRVの生成
-	device->CreateShaderResourceView(textureResource.Get(), &srvDesc, textureSrvHandleCPU);
+	device->CreateShaderResourceView(textureResourcePlane.Get(), &srvDescPlane, textureSrvHandleCPUPlane);
 
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2);
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2);
+	//--------------
+	//2つ目の画像
+	//--------------
 
-	// SRVの生成2
-	device->CreateShaderResourceView(textureResource2.Get(), &srvDesc2, textureSrvHandleCPU2);
+	// teapotTextureを読んで転送する
+	DirectX::ScratchImage mipImagesTeapot = LoadTexture(teapotModelData.material.textureFilePath);
+	const DirectX::TexMetadata& metadataTeapot = mipImagesTeapot.GetMetadata();
+	Microsoft::WRL::ComPtr<ID3D12Resource> textureResourceTeapot = CreateTextureResource(device, metadataTeapot);
+	UploadTextureData(textureResourceTeapot, mipImagesTeapot);
+
+	// metaDataを基にSRVの設定(Teapot)
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDescTeapot{};
+	srvDescTeapot.Format = metadataTeapot.format;
+	srvDescTeapot.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDescTeapot.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D; // 2Dテクスチャ
+	srvDescTeapot.Texture2D.MipLevels = UINT(metadataTeapot.mipLevels);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPUTeapot = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2);
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPUTeapot = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2);
+
+	// SRVの生成(Teapot)
+	device->CreateShaderResourceView(textureResourceTeapot.Get(), &srvDescTeapot, textureSrvHandleCPUTeapot);
+
+	//-------------
+	//3つ目の画像
+	//-------------
+
+	// fenceTextureを読んで転送する
+	DirectX::ScratchImage mipImagesFence = LoadTexture(fenceModelData.material.textureFilePath);
+	const DirectX::TexMetadata& metadataFence = mipImagesFence.GetMetadata();
+	Microsoft::WRL::ComPtr<ID3D12Resource> textureResourceFence = CreateTextureResource(device, metadataFence);
+	UploadTextureData(textureResourceFence, mipImagesFence);
+
+	// metaDataを基にSRVの設定(Fence)
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDescFence{};
+	srvDescFence.Format = metadataFence.format;
+	srvDescFence.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDescFence.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D; // 2Dテクスチャ
+	srvDescFence.Texture2D.MipLevels = UINT(metadataFence.mipLevels);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPUFence = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 3);
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPUFence = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 3);
+
+	// SRVの生成(Fence)
+	device->CreateShaderResourceView(textureResourceFence.Get(), &srvDescFence, textureSrvHandleCPUFence);
 
 	// ビューポート
 	D3D12_VIEWPORT viewport{};
@@ -1688,29 +1781,14 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	scissorRect.top = 0;
 	scissorRect.bottom = kClientHeight;
 	//Transform変数
-	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-
-	// OBJ用Transform
-	Transform transformObject{
-		{5.0f, 5.0f, 5.0f},
-		{0.0f, 0.0f, 0.0f},
-		{0.0f, 0.0f, 0.0f}
-	};
-
-	Transform transformTeapot{
-	{3.0f, 3.0f, 3.0f},
-	{0.0f, 0.0f, 0.0f},
-	{0.0f, 0.0f, 0.0f}
+	Transform transform{ {1.0f,1.0f,1.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,0.0f}
 	};
 
 	// デバッグカメラ
 	DebugCamera debugCamera;
 	debugCamera.Initialize();
-	Transform uvTransformSprite{
-		{1.0f,1.0f,1.0f},
-		{0.0f,0.0f,0.0f},
-		{0.0f,0.0f,0.0f},
-	};
 
 	//assert(false && "assertのテスト");
 
@@ -1769,7 +1847,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 		object.materialData->uvTransform =
 			MakeIdentity4x4();
-	};
+		};
 
 	// 最初からSphereとPlaneを1個ずつ表示
 	createMultipleModel(MultipleModelType::kSphere);
@@ -1927,19 +2005,19 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 					ImGuiTreeNodeFlags_DefaultOpen)) {
 					ImGui::DragFloat3(
 						"Sphere Translate",
-						&transform.translate.x,
+						&transformShere.translate.x,
 						0.1f);
 					ImGui::DragFloat3(
 						"Sphere Rotate",
-						&transform.rotate.x,
+						&transformShere.rotate.x,
 						0.01f);
 					ImGui::DragFloat3(
 						"Sphere Scale",
-						&transform.scale.x,
+						&transformShere.scale.x,
 						0.01f);
 					ImGui::ColorEdit4(
 						"Sphere Color",
-						&materialData->color.x);
+						&materialDataSphere->color.x);
 				}
 				if (ImGui::CollapsingHeader(
 					"Light",
@@ -2071,6 +2149,29 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			}
 			else if (currentScene == SceneType::kFence) {
 
+				ImGui::Begin("Object & Sprite Settings");
+
+				if (ImGui::CollapsingHeader(
+					"Object",
+					ImGuiTreeNodeFlags_DefaultOpen)) {
+
+					ImGui::DragFloat3(
+						"Object Translate",
+						&transformFence.translate.x,
+						0.1f);
+					ImGui::DragFloat3(
+						"Object Rotate",
+						&transformFence.rotate.x,
+						0.01f);
+					ImGui::DragFloat3(
+						"Object Scale",
+						&transformFence.scale.x,
+						0.01f);
+					ImGui::ColorEdit4(
+						"Object Color",
+						&materialDataFence->color.x);
+				}
+
 				ImGui::End();
 			}
 #endif
@@ -2147,35 +2248,14 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			// どちらのシーンにも3Dオブジェクトがあるのでカメラを更新
 			debugCamera.Update(key);
 
-			// Sprite用のWorldViewProjectionMatrixを作る
-			Matrix4x4 worldMatrixSprite = Affine::MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
-
-			// Sprite用のカメラは原点なので単位行列
-			Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
-
-			// Sprite用の正射影行列
-			Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHeight), 0.0f, 100.0f);
-
-			// Sprite用のWVP行列
-			Matrix4x4 worldViewProjectionMatrixSprite = Affine::Multiply(worldMatrixSprite, Affine::Multiply(viewMatrixSprite, projectionMatrixSprite));
-
-			// Sprite用TransformationMatrixへ書き込む
-			transformationMatrixDataSprite->WVP =
-				worldViewProjectionMatrixSprite;
-
-			transformationMatrixDataSprite->World =
-				worldMatrixSprite;
-
 			// デバッグカメラからビュー行列を取得
 			Matrix4x4 viewMatrix =
 				debugCamera.GetViewMatrix();
 
-			// 球体用World行列
-			Matrix4x4 worldMatrix =
-				Affine::MakeAffineMatrix(
-					transform.scale,
-					transform.rotate,
-					transform.translate);
+
+			//==================================
+			//画面に表示する大きさにする計算
+			//==================================
 
 			// Projection行列
 			Matrix4x4 projectionMatrix =
@@ -2185,38 +2265,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 					0.1f,
 					100.0f);
 
-			Matrix4x4 worldMatrixTeapot =
-				Affine::MakeAffineMatrix(
-					transformTeapot.scale,
-					transformTeapot.rotate,
-					transformTeapot.translate);
-
-			wvpDataTeapot->WVP =
-				Affine::Multiply(
-					worldMatrixTeapot,
-					Affine::Multiply(
-						viewMatrix,
-						projectionMatrix));
-
-			wvpDataTeapot->World =
-				worldMatrixTeapot;
-
-			for (MultipleModelObject& object : multipleModels) {
-				Matrix4x4 objectWorldMatrix =
-					Affine::MakeAffineMatrix(
-						object.transform.scale,
-						object.transform.rotate,
-						object.transform.translate);
-
-				object.wvpData->WVP =
-					Affine::Multiply(
-						objectWorldMatrix,
-						Affine::Multiply(
-							viewMatrix,
-							projectionMatrix));
-
-				object.wvpData->World = objectWorldMatrix;
-			}
+			//---------------
+			//Object
+			//---------------
 
 			// OBJ用World行列
 			Matrix4x4 worldMatrixObject =
@@ -2237,23 +2288,133 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			wvpDataObject->WVP = worldViewProjectionMatrixObject;
 			wvpDataObject->World = worldMatrixObject;
 
-			// WVP行列
-			Matrix4x4 worldViewProjectionMatrix =
+			//---------------
+			//Sprite
+			//---------------
+
+			// Sprite用のWorldViewProjectionMatrixを作る
+			Matrix4x4 worldMatrixSprite =
+				Affine::MakeAffineMatrix(
+					transformSprite.scale,
+					transformSprite.rotate,
+					transformSprite.translate);
+
+			// Sprite用のカメラは原点なので単位行列
+			Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
+
+			// Sprite用の正射影行列
+			Matrix4x4 projectionMatrixSprite =
+				MakeOrthographicMatrix(0.0f, 0.0f,
+					float(kClientWidth), float(kClientHeight),
+					0.0f, 100.0f);
+
+			// Sprite用のWVP行列
+			Matrix4x4 worldViewProjectionMatrixSprite =
 				Affine::Multiply(
-					worldMatrix,
+					worldMatrixSprite,
+					Affine::Multiply(viewMatrixSprite, projectionMatrixSprite));
+
+			// Sprite用TransformationMatrixへ書き込む
+			transformationMatrixDataSprite->WVP =
+				worldViewProjectionMatrixSprite;
+			transformationMatrixDataSprite->World =
+				worldMatrixSprite;
+
+			//UVTransform用(Sprite用)
+			Matrix4x4 uvTransformMatrix = Affine::MakeScaleMatrix(uvTransformSprite.scale);
+			uvTransformMatrix = Affine::Multiply(uvTransformMatrix, Affine::MakeRotateZMatrix(uvTransformSprite.rotate.z));
+			uvTransformMatrix = Affine::Multiply(uvTransformMatrix, Affine::MakeTranslateMatrix(uvTransformSprite.translate));
+			materialDataSprite->uvTransform = uvTransformMatrix;
+
+			//---------------
+			//Shere
+			//---------------
+
+			// 球体用World行列
+			Matrix4x4 worldMatrixShere =
+				Affine::MakeAffineMatrix(
+					transformShere.scale,
+					transformShere.rotate,
+					transformShere.translate);
+
+			// WVP行列(球体)
+			Matrix4x4 worldViewProjectionMatrixShere =
+				Affine::Multiply(
+					worldMatrixShere,
 					Affine::Multiply(
 						viewMatrix,
 						projectionMatrix));
 
 			// 球体用TransformationMatrixへ書き込む
-			wvpData->WVP = worldViewProjectionMatrix;
-			wvpData->World = worldMatrix;
+			wvpDataSphere->WVP = worldViewProjectionMatrixShere;
+			wvpDataSphere->World = worldMatrixShere;
 
-			//UVTransform用
-			Matrix4x4 uvTransformMatrix = Affine::MakeScaleMatrix(uvTransformSprite.scale);
-			uvTransformMatrix = Affine::Multiply(uvTransformMatrix, Affine::MakeRotateZMatrix(uvTransformSprite.rotate.z));
-			uvTransformMatrix = Affine::Multiply(uvTransformMatrix, Affine::MakeTranslateMatrix(uvTransformSprite.translate));
-			materialDataSprite->uvTransform = uvTransformMatrix;
+			//---------------
+			//multipleMode
+			//---------------
+
+			for (MultipleModelObject& object : multipleModels) {
+				Matrix4x4 objectWorldMatrix =
+					Affine::MakeAffineMatrix(
+						object.transform.scale,
+						object.transform.rotate,
+						object.transform.translate);
+
+				object.wvpData->WVP =
+					Affine::Multiply(
+						objectWorldMatrix,
+						Affine::Multiply(
+							viewMatrix,
+							projectionMatrix));
+
+				object.wvpData->World = objectWorldMatrix;
+			}
+
+			//---------------
+			//Teapot
+			//---------------
+
+			//Teapot
+			Matrix4x4 worldMatrixTeapot =
+				Affine::MakeAffineMatrix(
+					transformTeapot.scale,
+					transformTeapot.rotate,
+					transformTeapot.translate);
+
+			Matrix4x4 worldViewProjectionMatrixTeapot =
+				Affine::Multiply(
+					worldMatrixTeapot,
+					Affine::Multiply(
+						viewMatrix,
+						projectionMatrix));
+
+			wvpDataTeapot->WVP =
+				worldViewProjectionMatrixTeapot;
+			wvpDataTeapot->World =
+				worldMatrixTeapot;
+
+			//---------------
+			//Fence
+			//---------------
+
+			//Fence
+			Matrix4x4 worldMatrixFence =
+				Affine::MakeAffineMatrix(
+					transformFence.scale,
+					transformFence.rotate,
+					transformFence.translate);
+
+			Matrix4x4 worldViewProjectMatrixFence =
+				Affine::Multiply(
+					worldMatrixFence,
+					Affine::Multiply(
+						viewMatrix,
+						projectionMatrix));
+
+			wvpDataFence->WVP =
+				worldViewProjectMatrixFence;
+			wvpDataFence->World =
+				worldMatrixFence;
 
 #ifdef USE_IMGUI
 			// ImGuiの内部コマンドを生成する
@@ -2272,7 +2433,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 				commandList->SetGraphicsRootConstantBufferView(1, wvpResourceObject->GetGPUVirtualAddress());
 
-				commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+				commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPUPlane);
 
 				commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
@@ -2296,17 +2457,18 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 				// 2番目のシーン：球体を描画
 				commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 
-				commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+				commandList->SetGraphicsRootConstantBufferView(0, materialResourceSphere->GetGPUVirtualAddress());
 
-				commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+				commandList->SetGraphicsRootConstantBufferView(1, wvpResourceSphere->GetGPUVirtualAddress());
 
-				commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+				commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPUPlane);
 
 				commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
 				commandList->DrawInstanced(kSphereVertexCount, 1, 0, 0);
 				break;
 			case SceneType::kMultipleModels:
+				//3番目のシーンSpriteとShereを作る
 
 				for (MultipleModelObject& object : multipleModels) {
 					bool isSphere = object.type == MultipleModelType::kSphere;
@@ -2321,7 +2483,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 					commandList->SetGraphicsRootConstantBufferView(1, object.wvpResource->GetGPUVirtualAddress());
 
-					commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+					commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPUPlane);
 
 					commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
@@ -2330,6 +2492,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 				break;
 			case SceneType::kUtahTeapot:
+				//4番目のシーンTeapot
 
 				commandList->IASetVertexBuffers(0, 1, &vertexBufferViewTeapot);
 
@@ -2337,8 +2500,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 				commandList->SetGraphicsRootConstantBufferView(1, wvpResourceTeapot->GetGPUVirtualAddress());
 
-				// uvChecker.pngを使用
-				commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+				commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPUTeapot);
 
 				commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
@@ -2348,8 +2510,19 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 
 			case SceneType::kFence:
+				//5番目のシーンFence
 
 				commandList->IASetVertexBuffers(0, 1, &vertexBufferViewFence);
+
+				commandList->SetGraphicsRootConstantBufferView(0, materialResourceFence->GetGPUVirtualAddress());
+
+				commandList->SetGraphicsRootConstantBufferView(1, wvpResourceFence->GetGPUVirtualAddress());
+
+				commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPUFence);
+
+				commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+
+				commandList->DrawInstanced(static_cast<UINT>(fenceModelData.vertices.size()), 1, 0, 0);
 
 				break;
 
