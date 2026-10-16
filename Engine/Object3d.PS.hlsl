@@ -55,6 +55,12 @@ PixelShaderOutput main(VertexShaderOutput input)
             gMaterialColor *
             textureColor;
     }
+    
+    //textureのα値が0の時Pixelを棄却
+    if (textureColor.a <= 0.5)
+    {
+        discard;
+    }
 
     return output;
 }
