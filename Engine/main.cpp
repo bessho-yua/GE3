@@ -15,15 +15,16 @@
 #include"affine.h"
 #include "DebugCamera.h"
 #include"externals/DirectXTex/DirectXTex.h"
+#include "Input.h"
 #include <sstream>
 #include<wrl.h>
 #include<xaudio2.h>
 #define DIRECTINPUT_VERSION 0x0800
-#include <dinput.h>
 #include <cstring>
 #include <vector>
 #include <cmath>
 #include <cstring>
+
 
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
@@ -1017,20 +1018,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	//描画初期化処理
 	//
 
-	//DirectInputの初期化
-	IDirectInput8* directInput = nullptr;
-	hr = DirectInput8Create(wc.hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&directInput, nullptr);
-	assert(SUCCEEDED(hr));
-	//キーボードデバイスの生成
-	IDirectInputDevice8* keyboard = nullptr;
-	hr = directInput->CreateDevice(GUID_SysKeyboard, &keyboard, NULL);
-	assert(SUCCEEDED(hr));
-	//入力データ形式のセット
-	hr = keyboard->SetDataFormat(&c_dfDIKeyboard);
-	assert(SUCCEEDED(hr));
-	//排他制御レベルのセット
-	hr = keyboard->SetCooperativeLevel(hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
-	assert(SUCCEEDED(hr));
+	Input* input = nullptr;
+
+	input = new Input();
+	input->Initialize(wc.hInstance,hwnd);
 
 	// RootSignature作成
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
@@ -2238,15 +2229,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			// 形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-			// キーボード情報の取得開始
-			keyboard->Acquire();
-
-			// 全キーの入力状態を取得
-			BYTE key[256] = {};
-			keyboard->GetDeviceState(sizeof(key), key);
+			input->Update();
 
 			// どちらのシーンにも3Dオブジェクトがあるのでカメラを更新
-			debugCamera.Update(key);
+			//debugCamera.Update(key);
 
 			// デバッグカメラからビュー行列を取得
 			Matrix4x4 viewMatrix =
@@ -2576,6 +2562,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 #endif
+
+	delete input;
 
 	//XAudio2解放
 	xAudio2.Reset();
