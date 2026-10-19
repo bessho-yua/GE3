@@ -1403,7 +1403,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	//Fence
 	//--------------------
 
-	ModelData fenceModelData = LoadObjFile("resources", "fence.obj");
+	ModelData fenceModelData = LoadObjFile("resources/fence", "fence.obj");
 
 	assert(!fenceModelData.vertices.empty());
 
