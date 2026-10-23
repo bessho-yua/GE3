@@ -2283,50 +2283,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			//Sprite
 			//---------------
 
-			// デバッグカメラからビュー行列を取得
-			Matrix4x4 viewMatrix =
-				debugCamera.GetViewMatrix();
-
-
-			//==================================
-			//画面に表示する大きさにする計算
-			//==================================
-
-			// Projection行列
-			Matrix4x4 projectionMatrix =
-				Affine::MakePerspectiveFovMatrix(
-					0.45f,
-					float(kClientWidth) / float(kClientHeight),
-					0.1f,
-					100.0f);
-
-			//---------------
-			//Object
-			//---------------
-
-			// OBJ用World行列
-			Matrix4x4 worldMatrixObject =
-				Affine::MakeAffineMatrix(
-					transformObject.scale,
-					transformObject.rotate,
-					transformObject.translate);
-
-			// OBJ用WVP行列
-			Matrix4x4 worldViewProjectionMatrixObject =
-				Affine::Multiply(
-					worldMatrixObject,
-					Affine::Multiply(
-						viewMatrix,
-						projectionMatrix));
-
-			// OBJ用TransformationMatrixへ書き込む
-			wvpDataObject->WVP = worldViewProjectionMatrixObject;
-			wvpDataObject->World = worldMatrixObject;
-
-			//---------------
-			//Sprite
-			//---------------
-
 			// Sprite用のWorldViewProjectionMatrixを作る
 			Matrix4x4 worldMatrixSprite =
 				Affine::MakeAffineMatrix(
