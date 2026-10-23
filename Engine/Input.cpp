@@ -23,6 +23,7 @@ void Input::Initialize(HINSTANCE hInstance,HWND hwnd) {
 
 void Input::Update() {
 
+
 	memcpy(keyPre, key, sizeof(key));
 
 	// キーボード情報の取得開始
