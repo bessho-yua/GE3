@@ -15,10 +15,20 @@ public:
 
 	void Update();
 
+	bool PushKey(BYTE keyNumber);
+
+	bool TriggerKey(BYTE keyNumber);
+
 private:
 
+	//DirectInputの初期化
+	ComPtr<IDirectInput8> directInput = nullptr;
 	//キーボードデバイスの生成
 	ComPtr<IDirectInputDevice8> keyboard;
+	// 全キーの入力状態を取得
+	BYTE key[256] = {};
+	// 全キーの入力状態を取得
+	BYTE keyPre[256] = {};
 
 };
 

@@ -1848,6 +1848,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	directionalLightData->direction = { 0.0f,-1.0f,0.0f };
 	directionalLightData->intensity = 1.0f;
 
+	//キー用
+	/*if (input->PushKey(DIK_0)) {
+		
+	}*/
+
 	//
 	//ゲームループ
 	//
