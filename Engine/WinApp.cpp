@@ -1,5 +1,4 @@
 #include "WinApp.h"
-#include <cstdint>
 #include <cassert>
 #include <cstring>
 
@@ -14,8 +13,6 @@ void WinApp::Initialize()
 	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 	assert(SUCCEEDED(hr));
 
-	WNDCLASS wc{};
-
 	wc.lpfnWndProc = WindowProc;
 
 	wc.lpszClassName = L"CG2WindowClass";
@@ -26,15 +23,12 @@ void WinApp::Initialize()
 
 	RegisterClass(&wc);
 
-	const int32_t kClientWidth = 1280;
-	const int32_t kClientHeight = 720;
-
 	RECT wrc = { 0,0,kClientWidth,kClientHeight };
 
 	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
 
 	//ウィンドウの生成
-	HWND hwnd = CreateWindow(
+	hwnd = CreateWindow(
 		wc.lpszClassName,
 		L"CG2",
 		WS_OVERLAPPEDWINDOW,
