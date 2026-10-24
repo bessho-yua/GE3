@@ -1,9 +1,10 @@
 #pragma once
+#include <windows.h>
 
 class WinApp
 {
 public://静的メンバ関数
-	static LRESULT CALLBACK windowProc(HWND hwnd, UINT msg, WWPARAM wparam, LPARAM lparam);
+	static LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 
 public://メンバ関数

@@ -22,7 +22,6 @@
 #include <cstring>
 #include <vector>
 #include <cmath>
-#include <cstring>
 #include "WinApp.h"
 
 
@@ -99,27 +98,6 @@ struct ModelData {
 	std::vector<VertexData> vertices;
 	MaterialData material;
 };
-
-//ウィンドウプロシージャ
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-
-#ifdef USE_IMGUI
-	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
-		return true;
-	}
-#endif
-
-	//メッセージに応じてゲームの固有の処理を行う
-	switch (msg) {
-		//ウィンドウが破棄された
-	case WM_DESTROY:
-		//OSに対して、アプリの終了を伝える
-		PostQuitMessage(0);
-		return 0;
-	}
-	//標準のメッセージ処理を行う
-	return DefWindowProc(hwnd, msg, wparam, lparam);
-}
 
 //Log関数
 void Log(std::ostream& os, const std::string& message) {
