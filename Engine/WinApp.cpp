@@ -50,6 +50,13 @@ void WinApp::Update()
 
 }
 
+void WinApp::Finalize()
+{
+	CloseWindow(hwnd);
+
+	CoUninitialize();
+}
+
 //ウィンドウプロシージャ
 LRESULT CALLBACK WinApp::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 

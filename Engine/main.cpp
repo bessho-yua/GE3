@@ -798,7 +798,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	Input* input = nullptr;
 
 	input = new Input();
-	input->Initialize(winApp->GetHInstance(), winApp->GetHwnd());
+	input->Initialize(winApp);
 
 	// RootSignature作成
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
@@ -1344,9 +1344,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	CloseHandle(fenceEvent);
 
-	CloseWindow(winApp->GetHwnd());
-
-	CoUninitialize();
+	//WindowsAPIの終了処理
+	winApp->Finalize();
 
 	return 0;
 }

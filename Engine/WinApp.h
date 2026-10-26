@@ -14,6 +14,8 @@ public://メンバ関数
 	void Initialize();
 	//更新
 	void Update();
+	//終了
+	void Finalize();
 
 	HWND GetHwnd() const { return hwnd; }
 
