@@ -21,6 +21,9 @@ public://メンバ関数
 
 	HINSTANCE GetHInstance()const { return wc.hInstance; }
 
+	//メッセージの処理
+	bool ProcessMessage();
+
 public://定数
 	//クライアント領域のサイズ
 	static const int32_t kClientWidth = 1280;
