@@ -12,18 +12,20 @@
 #include<strsafe.h>
 #include<dxgidebug.h>
 #include <dxcapi.h>
-#include"affine.h"
-#include "DebugCamera.h"
 #include"externals/DirectXTex/DirectXTex.h"
-#include "Input.h"
 #include <sstream>
 #include<wrl.h>
 #define DIRECTINPUT_VERSION 0x0800
 #include <cstring>
 #include <vector>
 #include <cmath>
-#include "WinApp.h"
 #include <cstdint>
+
+#include"affine.h"
+#include "DebugCamera.h"
+#include "Input.h"
+#include "WinApp.h"
+#include "DirectXCommon.h"
 
 
 #ifdef USE_IMGUI
@@ -274,10 +276,6 @@ Matrix4x4 MakeIdentity4x4() {
 
 	return result;
 }
-//string->wstring
-std::wstring ConvertString(const std::string& str);
-//wstring->string
-std::string ConvertString(const std::wstring& str);
 
 static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception) {
 	SYSTEMTIME time;
@@ -589,74 +587,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	//DirectX初期化処理
 	//
 
-#ifdef _DEBUG
-	Microsoft::WRL::ComPtr<ID3D12Debug1> debugController = nullptr;
-	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {
-		debugController->EnableDebugLayer();
-		debugController->SetEnableGPUBasedValidation(TRUE);
-	}
-#endif
+	//DirectXのポインタ
+	DirectXCommon* dxCommon = nullptr;
 
-	//DXGIファクトリーの生成
-	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-	assert(SUCCEEDED(hr));
-	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory = nullptr;
-	hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory));
-	assert(SUCCEEDED(hr));
-	Microsoft::WRL::ComPtr<IDXGIAdapter4> useAdapter = nullptr;
-	for (UINT i = 0; dxgiFactory->EnumAdapterByGpuPreference(i, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&useAdapter)) !=
-		DXGI_ERROR_NOT_FOUND; ++i) {
-		DXGI_ADAPTER_DESC3 adapterDesc{};
-		hr = useAdapter->GetDesc3(&adapterDesc);
-		assert(SUCCEEDED(hr));
-		if (!(adapterDesc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE)) {
-
-			Log(logStream, ConvertString(std::format(L"USE Adapter:{}\n", adapterDesc.Description)));
-			break;
-		}
-		useAdapter = nullptr;
-	}
-	assert(useAdapter != nullptr);
-
-	Microsoft::WRL::ComPtr<ID3D12Device> device = nullptr;
-
-	D3D_FEATURE_LEVEL featureLevels[] = {
-		D3D_FEATURE_LEVEL_12_2,D3D_FEATURE_LEVEL_12_1,D3D_FEATURE_LEVEL_12_0
-	};
-	const char* featureLevelStrings[] = { "12.2","12.1","12.0" };
-
-	for (size_t i = 0; i < _countof(featureLevels); ++i) {
-		hr = D3D12CreateDevice(useAdapter.Get(), featureLevels[i], IID_PPV_ARGS(&device));
-
-		if (SUCCEEDED(hr)) {
-			Log(logStream, std::format("FeatureLevel : {}\n", featureLevelStrings[i]));
-			break;
-		}
-	}
-	assert(device != nullptr);
-	Log(logStream, "Complete create D3D12Device\n");
-#ifdef _DEBUG
-	Microsoft::WRL::ComPtr<ID3D12InfoQueue> infoQueue = nullptr;
-	if (SUCCEEDED(device->QueryInterface(IID_PPV_ARGS(&infoQueue)))) {
-		//やばいエラー時に止まる
-		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
-		//エラー時に止まる
-		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
-		//警告時に止まる
-		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
-		//抑制するメッセージのID
-		D3D12_MESSAGE_ID denyIds[] = {
-			D3D12_MESSAGE_ID_RESOURCE_BARRIER_MISMATCHING_COMMAND_LIST_TYPE
-		};
-		D3D12_MESSAGE_SEVERITY severities[] = { D3D12_MESSAGE_SEVERITY_INFO };
-		D3D12_INFO_QUEUE_FILTER filter{};
-		filter.DenyList.NumIDs = _countof(denyIds);
-		filter.DenyList.pIDList = denyIds;
-		filter.DenyList.NumSeverities = _countof(severities);
-		filter.DenyList.pSeverityList = severities;
-		infoQueue->PushStorageFilter(&filter);
-	}
-#endif
+	//DirectXの初期化
+	dxCommon = new DirectXCommon();
+	dxCommon->Initialize();
 
 	const uint32_t descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
@@ -1344,6 +1280,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	winApp->Finalize();
 
 	delete winApp;
+
+	delete dxCommon;
 
 	return 0;
 }
