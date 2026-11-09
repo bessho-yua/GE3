@@ -1,6 +1,7 @@
 #include "DirectXCommon.h"
 
 #include"Logger.h"
+#include"StringUtility.h"
 #include<d3d12.h>
 #include<dxgi1_6.h>
 #include<wrl.h>
@@ -8,6 +9,9 @@
 #include<cassert>
 #include<string>
 #include<format>
+#include <filesystem>
+#include<fstream>
+#include<chrono>
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
@@ -18,11 +22,26 @@ using namespace Microsoft::WRL;
 
 void DirectXCommon::Initialize() 
 {
-
+	DirectXCommon::DeviceInitialize();
 }
 
 void DirectXCommon::DeviceInitialize() 
 {
+	std::filesystem::create_directory("logs");
+	//現在時刻を取得(UCT時刻)
+	std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+	//ログファイルの名前にコンマ何秒はいらないので削って秒にする
+	std::chrono::time_point < std::chrono::system_clock, std::chrono::seconds>
+		nowSeconds = std::chrono::time_point_cast<std::chrono::seconds>(now);
+	//日本時間(PCの設定時間)に変換
+	std::chrono::zoned_time localTime{ std::chrono::current_zone(),nowSeconds };
+	//formatを使って年月日_時分秒の文字列に変換
+	std::string dateString = std::format("{:%Y%m%d_%H%M%S}", localTime);
+	//時刻を使ってファイル名を決定
+	std::string logFilePath = std::string("logs/") + dateString + ".log";
+	//ファイルを作って書き込み準備
+	std::ofstream logStream(logFilePath);
+
 	HRESULT hr;
 
 #ifdef _DEBUG
@@ -36,7 +55,7 @@ void DirectXCommon::DeviceInitialize()
 	//DXGIファクトリーの生成
 	hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 	assert(SUCCEEDED(hr));
-	ComPtr<IDXGIFactory7> dxgiFactory = nullptr;
+	dxgiFactory = nullptr;
 	hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory));
 	assert(SUCCEEDED(hr));
 	ComPtr<IDXGIAdapter4> useAdapter = nullptr;
@@ -47,14 +66,14 @@ void DirectXCommon::DeviceInitialize()
 		assert(SUCCEEDED(hr));
 		if (!(adapterDesc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE)) {
 
-			Logger::Log(logStream, ConvertString(std::format(L"USE Adapter:{}\n", adapterDesc.Description)));
+			Logger::Log(logStream, StringUtility::ConvertString(std::format(L"USE Adapter:{}\n", adapterDesc.Description)));
 			break;
 		}
 		useAdapter = nullptr;
 	}
 	assert(useAdapter != nullptr);
 
-	ComPtr<ID3D12Device> device = nullptr;
+	device = nullptr;
 
 	D3D_FEATURE_LEVEL featureLevels[] = {
 		D3D_FEATURE_LEVEL_12_2,D3D_FEATURE_LEVEL_12_1,D3D_FEATURE_LEVEL_12_0

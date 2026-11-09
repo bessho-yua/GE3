@@ -2,9 +2,6 @@
 #include<cstdint>
 #include<string>
 #include <format>
-#include <filesystem>
-#include<fstream>
-#include<chrono>
 #include<d3d12.h>
 #include<dxgi1_6.h>
 #include<cassert>
@@ -18,6 +15,9 @@
 #define DIRECTINPUT_VERSION 0x0800
 #include <cstring>
 #include <vector>
+#include <filesystem>
+#include<fstream>
+#include<chrono>
 #include <cmath>
 #include <cstdint>
 
@@ -26,6 +26,8 @@
 #include "Input.h"
 #include "WinApp.h"
 #include "DirectXCommon.h"
+#include"Logger.h"
+#include"StringUtility.h"
 
 
 #ifdef USE_IMGUI
@@ -102,40 +104,6 @@ struct ModelData {
 	MaterialData material;
 };
 
-//Log関数
-void Log(std::ostream& os, const std::string& message) {
-	os << message << std::endl;
-	OutputDebugStringA(message.c_str());
-}
-//ConvertString
-std::wstring ConvertString(const std::string& str) {
-	if (str.empty()) {
-		return std::wstring();
-	}
-
-	auto sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), NULL, 0);
-	if (sizeNeeded == 0) {
-		return std::wstring();
-	}
-	std::wstring result(sizeNeeded, 0);
-	MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), &result[0], sizeNeeded);
-	return result;
-}
-
-std::string ConvertString(const std::wstring& str) {
-	if (str.empty()) {
-		return std::string();
-	}
-
-	auto sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), NULL, 0, NULL, NULL);
-	if (sizeNeeded == 0) {
-		return std::string();
-	}
-	std::string result(sizeNeeded, 0);
-	WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), result.data(), sizeNeeded, NULL, NULL);
-	return result;
-}
-
 IDxcBlob* CompileShader(
 	// CompilerするShaderファイルへのパス
 	const std::wstring& filePath,
@@ -148,7 +116,7 @@ IDxcBlob* CompileShader(
 	std::ostream& logStream)
 {
 	// これからシェーダーをコンパイルする旨をログに出す
-	Log(logStream, ConvertString(std::format(L"Begin CompileShader, path:{}, profile:{}\n", filePath, profile)));
+	Logger::Log(logStream, StringUtility::ConvertString(std::format(L"Begin CompileShader, path:{}, profile:{}\n", filePath, profile)));
 
 	// hlslファイルを読む
 	IDxcBlobEncoding* shaderSource = nullptr;
@@ -188,7 +156,7 @@ IDxcBlob* CompileShader(
 	shaderResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&shaderError), nullptr);
 
 	if (shaderError != nullptr && shaderError->GetStringLength() != 0) {
-		Log(logStream, shaderError->GetStringPointer());
+		Logger::Log(logStream, shaderError->GetStringPointer());
 
 		// 警告・エラーダメゼッタイ
 		assert(false);
@@ -199,7 +167,7 @@ IDxcBlob* CompileShader(
 	assert(SUCCEEDED(hr));
 
 	// 成功したログを出す
-	Log(logStream, ConvertString(std::format(L"Compile Succeeded, path:{}, profile:{}\n", filePath, profile)));
+	Logger::Log(logStream, StringUtility::ConvertString(std::format(L"Compile Succeeded, path:{}, profile:{}\n", filePath, profile)));
 
 	// もう使わないリソースを解放
 	shaderSource->Release();
@@ -302,7 +270,7 @@ DirectX::ScratchImage LoadTexture(const std::string& filePath)
 
 	// テクスチャファイルを読んでプログラムで扱えるようにする
 	DirectX::ScratchImage image{};
-	std::wstring filePathW = ConvertString(filePath);
+	std::wstring filePathW = StringUtility::ConvertString(filePath);
 	HRESULT hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
 	assert(SUCCEEDED(hr));
 
@@ -557,8 +525,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	//
 
 	SetUnhandledExceptionFilter(ExportDump);
-
-
 
 	std::filesystem::create_directory("logs");
 	//現在時刻を取得(UCT時刻)
