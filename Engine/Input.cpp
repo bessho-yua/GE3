@@ -6,6 +6,8 @@
 
 void Input::Initialize(WinApp* winApp) {
 
+	//NULL検出
+	assert(winApp);
 	//借りてきたWinAppのインスタンスを記録
 	this->winApp = winApp;
 

@@ -207,34 +207,6 @@ Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(const Microsoft::WRL
 	return vertexResource;
 }
 
-Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(const Microsoft::WRL::ComPtr<ID3D12Device>& device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible) {
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap = nullptr;
-
-	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc{};
-	descriptorHeapDesc.Type = heapType;
-	descriptorHeapDesc.NumDescriptors = numDescriptors;
-	descriptorHeapDesc.Flags = shaderVisible
-		? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE
-		: D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-
-	HRESULT hr = device->CreateDescriptorHeap(
-		&descriptorHeapDesc,
-		IID_PPV_ARGS(&descriptorHeap)
-	);
-	assert(SUCCEEDED(hr));
-
-	return descriptorHeap;
-}
-D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index) {
-	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	handleCPU.ptr += (descriptorSize * index);
-	return handleCPU;
-}
-D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index) {
-	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
-	handleGPU.ptr += (descriptorSize * index);
-	return handleGPU;
-}
 //単位行列
 Matrix4x4 MakeIdentity4x4() {
 	Matrix4x4 result = {};
@@ -331,38 +303,6 @@ void UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource>& texture, co
 
 		assert(SUCCEEDED(hr));
 	}
-}
-
-Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, int32_t width, int32_t height) {
-	// 生成するResourceの設定
-	D3D12_RESOURCE_DESC resourceDesc{};
-	resourceDesc.Width = width;                         // Textureの幅
-	resourceDesc.Height = height;                       // Textureの高さ
-	resourceDesc.MipLevels = 1;                         // mipmapの数
-	resourceDesc.DepthOrArraySize = 1;                  // 奥行き or 配列Textureの配列数
-	resourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // DepthStencilとして利用可能なフォーマット
-	resourceDesc.SampleDesc.Count = 1;                  // サンプリングカウント。1固定
-	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D; // 2次元
-	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL; // DepthStencilとして使う通知
-
-	// 利用するHeapの設定
-	D3D12_HEAP_PROPERTIES heapProperties{};
-	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT; // VRAM上に作る
-	// 深度値のクリア設定
-	D3D12_CLEAR_VALUE depthClearValue{};
-	depthClearValue.DepthStencil.Depth = 1.0f; // 1.0f（最大値）でクリア
-	depthClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // フォーマット。Resourceと合わせる
-	// Resourceの生成
-	Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
-	HRESULT hr = device->CreateCommittedResource(
-		&heapProperties, // Heapの設定
-		D3D12_HEAP_FLAG_NONE, // Heapの特殊な設定。特になし。
-		&resourceDesc, // Resourceの設定
-		D3D12_RESOURCE_STATE_DEPTH_WRITE, // 深度値を書き込む状態にしておく
-		&depthClearValue, // Clear最適値
-		IID_PPV_ARGS(&resource)); // 作成するResourceポインタへのポインタ
-	assert(SUCCEEDED(hr));
-	return resource;
 }
 
 Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip) {
@@ -526,20 +466,20 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	SetUnhandledExceptionFilter(ExportDump);
 
-	std::filesystem::create_directory("logs");
-	//現在時刻を取得(UCT時刻)
-	std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
-	//ログファイルの名前にコンマ何秒はいらないので削って秒にする
-	std::chrono::time_point < std::chrono::system_clock, std::chrono::seconds>
-		nowSeconds = std::chrono::time_point_cast<std::chrono::seconds>(now);
-	//日本時間(PCの設定時間)に変換
-	std::chrono::zoned_time localTime{ std::chrono::current_zone(),nowSeconds };
-	//formatを使って年月日_時分秒の文字列に変換
-	std::string dateString = std::format("{:%Y%m%d_%H%M%S}", localTime);
-	//時刻を使ってファイル名を決定
-	std::string logFilePath = std::string("logs/") + dateString + ".log";
-	//ファイルを作って書き込み準備
-	std::ofstream logStream(logFilePath);
+	//std::filesystem::create_directory("logs");
+	////現在時刻を取得(UCT時刻)
+	//std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+	////ログファイルの名前にコンマ何秒はいらないので削って秒にする
+	//std::chrono::time_point < std::chrono::system_clock, std::chrono::seconds>
+	//	nowSeconds = std::chrono::time_point_cast<std::chrono::seconds>(now);
+	////日本時間(PCの設定時間)に変換
+	//std::chrono::zoned_time localTime{ std::chrono::current_zone(),nowSeconds };
+	////formatを使って年月日_時分秒の文字列に変換
+	//std::string dateString = std::format("{:%Y%m%d_%H%M%S}", localTime);
+	////時刻を使ってファイル名を決定
+	//std::string logFilePath = std::string("logs/") + dateString + ".log";
+	////ファイルを作って書き込み準備
+	//std::ofstream logStream(logFilePath);
 
 	//WinAppのポインタ
 	WinApp* winApp = nullptr;
@@ -558,64 +498,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	//DirectXの初期化
 	dxCommon = new DirectXCommon();
-	dxCommon->Initialize();
-
-	const uint32_t descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-	const uint32_t descriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-
-	const uint32_t descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-
-	//コマンドキューを生成
-	Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue = nullptr;
-	D3D12_COMMAND_QUEUE_DESC commandQueueDesc{};
-	hr = device->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&commandQueue));
-
-	assert(SUCCEEDED(hr));
-
-	//コマンドアロケータを生成
-	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator = nullptr;
-	hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
-	assert(SUCCEEDED(hr));
-
-	//コマンドリストを生成
-	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList = nullptr;
-	hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator.Get(), nullptr,
-		IID_PPV_ARGS(&commandList));
-	assert(SUCCEEDED(hr));
-
-	//スワップチェーンを生成
-	Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain = nullptr;
-	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
-	swapChainDesc.Width = WinApp::kClientWidth;
-	swapChainDesc.Height = WinApp::kClientHeight;
-	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	swapChainDesc.SampleDesc.Count = 1;
-	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapChainDesc.BufferCount = 2;
-	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-	//コマンドキュー、ウィンドウハンドル、設定を渡して生成
-	hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue.Get(), winApp->GetHwnd(), &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(swapChain.GetAddressOf()));
-	assert(SUCCEEDED(hr));
-
-	// RTV用
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap =
-		CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
-
-	// DSV用
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap =
-		CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
-
-	// SRV用
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap =
-		CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
-
-	//SwapChainからResourceを引っ張ってくる
-	Microsoft::WRL::ComPtr<ID3D12Resource> swapChainResources[2] = { nullptr };
-	hr = swapChain->GetBuffer(0, IID_PPV_ARGS(&swapChainResources[0]));
-	assert(SUCCEEDED(hr));
-	hr = swapChain->GetBuffer(1, IID_PPV_ARGS(&swapChainResources[1]));
-	assert(SUCCEEDED(hr));
+	dxCommon->Initialize(winApp);
 
 	// DepthStencilTextureをウィンドウのサイズで作成
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource =
@@ -631,11 +514,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		depthStencilResource.Get(),
 		&dsvDesc,
 		dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-
-	//RTVの設定
-	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
-	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 
 #ifdef USE_IMGUI
 	// ImGuiの初期化
@@ -656,18 +534,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	ImGuiIO& io = ImGui::GetIO();
 	io.Fonts->Build();
 #endif
-
-	//ディスクリプタの先頭を取得
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	//RTVを2つ作るのでディスクリプタを2つ用意
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
-	//1つ目
-	rtvHandles[0] = rtvStartHandle;
-	device->CreateRenderTargetView(swapChainResources[0].Get(), &rtvDesc, rtvHandles[0]);
-	//2つ目のディスクリプタハンドルを得る
-	rtvHandles[1].ptr = rtvHandles[0].ptr + device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	//2つ目
-	device->CreateRenderTargetView(swapChainResources[1].Get(), &rtvDesc, rtvHandles[1]);
 
 	//初期値0でFenceを作る
 	Microsoft::WRL::ComPtr<ID3D12Fence> fence = nullptr;
@@ -756,7 +622,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	);
 
 	if (FAILED(hr)) {
-		Log(logStream, reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
+		Logger::Log(logStream, reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
 		assert(false);
 	}
 
