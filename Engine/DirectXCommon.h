@@ -72,6 +72,14 @@ public:
 	void InitializeImGui();
 #endif
 	///<summary>
+	///描画前処理
+	///</summary>
+	void PreDraw();
+	///<summary>
+	///描画後処理
+	///</summary>
+	void PostDraw();
+	///<summary>
 	///SRVの指定番号のCPUデスクリプタハンドルを取得する
 	///</summary>
 	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index);
@@ -136,7 +144,7 @@ private:
 	//スワップチェーンリソース
 	std::array<Microsoft::WRL::ComPtr<ID3D12Resource>,2> swapChainResources;
 	//RTVハンドル
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];//RTVを2つ作るのでディスクリプタを2つ用意
 	//fence
 	Microsoft::WRL::ComPtr<ID3D12Fence> fence;
 	//fenceの大きさ
@@ -153,5 +161,7 @@ private:
 	IDxcCompiler3* dxcCompiler;
 	//インクルードハンドラー
 	IDxcIncludeHandler* includeHandler;
+	//TransitionBaffierの設定
+	D3D12_RESOURCE_BARRIER barrier{};
 };
 
