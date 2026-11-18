@@ -30,7 +30,7 @@ void WinApp::Initialize()
 	//ウィンドウの生成
 	hwnd = CreateWindow(
 		wc.lpszClassName,
-		L"CG2",
+		L"GE3",
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
