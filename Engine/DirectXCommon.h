@@ -1,6 +1,14 @@
 #pragma once
 #include "WinApp.h"
 
+#include <Windows.h>
+#include <cstdint>
+#include <array>
+#include <wrl.h>
+#include <d3d12.h>
+#include <dxgi1_6.h>
+#include <dxcapi.h>
+
 class DirectXCommon
 {
 public:
@@ -23,20 +31,46 @@ public:
 	///<summary>
 	///深度バッファの生成
 	///</summary>
-	void InitializeDepthBuffer(int32_t width, int32_t height);
+	void InitializeDepthBuffer();
+	///<summary>
+	///各種デスクリプタヒープの生成
+	///</summary>
+	void InitializeVariousDescriptorHeap();
 	///<summary>
 	///デスクリプタヒープを生成する
 	///</summary>
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap
 	(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
 	///<summary>
-	///各種デスクリプタヒープの生成
-	///</summary>
-	void InitializeVariousDescriptorHeap();
-	///<summary>
 	///レンダーターゲットビューの初期化
 	///</summary>
 	void InitializeRenderTargetView();
+	///<summary>
+	///深度ステンシルビューの初期化
+	///</summary>
+	void InitializeDepthStencilView();
+	///<summary>
+	///フェンスの初期化
+	///</summary>
+	void InitializeFence();
+	///<summary>
+	///ビューポート矩形の初期化
+	///</summary>
+	void InitializeViewportRectangle();
+	///<summary>
+	///シザリング矩形の初期化
+	///</summary>
+	void InitializeScissorRectangle();
+	///<summary>
+	///DXCコンパイラの生成
+	///</summary>
+	void GeneratingDXCCompiler();
+#ifdef USE_IMGUI
+	///<summary>
+	///ImGuiの初期化
+	///</summary>
+	void InitializeImGui();
+#endif
 	///<summary>
 	///SRVの指定番号のCPUデスクリプタハンドルを取得する
 	///</summary>
@@ -53,7 +87,7 @@ private:
 	static D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(
 		const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap,
 		uint32_t descriptorSize, uint32_t index);
-	//<summary>
+	///<summary>
 	///指定番号のGPUデスクリプタハンドルを取得する
 	///</summary>
 	static D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(
@@ -67,6 +101,8 @@ private:
 	//デバグコントローラー
 	Microsoft::WRL::ComPtr<ID3D12Debug1> debugController;
 #endif
+	//assert使用
+	HRESULT hr;
 	//DXGIファクトリ
 	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory;
 	//アダプター
@@ -84,7 +120,7 @@ private:
 	//スワップチェーン
 	Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain;
 	// 深度バッファーのResourceの生成
-	Microsoft::WRL::ComPtr<ID3D12Resource> resource;
+	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource;
 	//SRVのデスクリプタサイズ
 	uint32_t descriptorSizeSRV;
 	//RTVのデスクリプタサイズ
@@ -98,6 +134,24 @@ private:
 	//SRVのデスクリプタヒープ
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap;
 	//スワップチェーンリソース
-	Microsoft::WRL::ComPtr<ID3D12Resource> swapChainResources[2];
+	std::array<Microsoft::WRL::ComPtr<ID3D12Resource>,2> swapChainResources;
+	//RTVハンドル
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
+	//fence
+	Microsoft::WRL::ComPtr<ID3D12Fence> fence;
+	//fenceの大きさ
+	uint64_t fenceValue;
+	//fenceイベント
+	HANDLE fenceEvent;
+	//ビューポート
+	D3D12_VIEWPORT viewport{};
+	// シザー矩形
+	D3D12_RECT scissorRect{};
+	// DXCユーティリティの生成
+	IDxcUtils* dxcUtils;
+	// DXCコンパイラの生成
+	IDxcCompiler3* dxcCompiler;
+	//インクルードハンドラー
+	IDxcIncludeHandler* includeHandler;
 };
 
