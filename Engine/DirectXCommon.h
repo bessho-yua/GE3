@@ -8,6 +8,10 @@
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <dxcapi.h>
+#include<fstream>
+#include<string>
+
+#include"externals/DirectXTex/DirectXTex.h"
 
 class DirectXCommon
 {
@@ -80,6 +84,37 @@ public:
 	///</summary>
 	void PostDraw();
 	///<summary>
+	///後処理
+	///</summary>
+	void Finalize();
+	//getter
+	ID3D12Device* GetDevice() const { return device.Get(); }
+	ID3D12GraphicsCommandList* GetCommandList()const { return commandList.Get(); }
+	std::ofstream& GetLogStream(){ return logStream; }
+
+	//シェーダーのコンパイル
+	Microsoft::WRL::ComPtr<IDxcBlob>CompileShader(
+		const std::wstring& filePath,
+		const wchar_t* profile);
+	///<summary>
+	///バッファリソースの生成
+	///</summary>
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
+	///<summary>
+	///テクスチャリソースの生成
+	///</summary>
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
+	///<summary>
+	///テクスチャデータの転送
+	///</summary>
+	void UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages);
+	///<summary>
+	///テクスチャファイルの読み込み
+	///</summary>
+	/// <param name="filePath">テクスチャファイルのパス</param>
+	/// <returns>画像イメージデータ</returns>
+	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
+	///<summary>
 	///SRVの指定番号のCPUデスクリプタハンドルを取得する
 	///</summary>
 	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index);
@@ -88,7 +123,6 @@ public:
 	///</summary>
 	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);
 private:
-
 	///<summary>
 	///指定番号のCPUデスクリプタハンドルを取得する
 	///</summary>
@@ -111,6 +145,8 @@ private:
 #endif
 	//assert使用
 	HRESULT hr;
+	//Log関係
+	std::ofstream logStream;
 	//DXGIファクトリ
 	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory;
 	//アダプター
