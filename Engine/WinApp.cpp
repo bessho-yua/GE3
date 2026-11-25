@@ -1,6 +1,7 @@
 #include "WinApp.h"
 #include <cassert>
-#include <cstring>
+
+#pragma comment(lib,"winmm.lib")
 
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
@@ -9,6 +10,9 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 
 void WinApp::Initialize()
 {
+
+	//システムタイマーの分解度を上げる
+	timeBeginPeriod(1);
 
 	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 	assert(SUCCEEDED(hr));

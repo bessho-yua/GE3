@@ -10,6 +10,7 @@
 #include <dxcapi.h>
 #include<fstream>
 #include<string>
+#include<chrono>
 
 #include"externals/DirectXTex/DirectXTex.h"
 
@@ -123,6 +124,12 @@ public:
 	///</summary>
 	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);
 private:
+	//記録時間(FPS固定用)
+	std::chrono::steady_clock::time_point reference_;
+	//FPS固定初期化
+	void InitializeFixFPS();
+	//FPS固定更新
+	void UpdateFixFPS();
 	///<summary>
 	///指定番号のCPUデスクリプタハンドルを取得する
 	///</summary>
