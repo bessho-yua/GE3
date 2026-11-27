@@ -1,5 +1,5 @@
 #pragma once
-#include "WinApp.h"
+#include "../base/WinApp.h"
 #include<windows.h>
 #include <wrl.h>
 #define DIRECTINPUT_VERSION   0x0800

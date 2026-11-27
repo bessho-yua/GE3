@@ -21,13 +21,13 @@
 #include <cmath>
 #include <cstdint>
 
-#include"affine.h"
-#include "DebugCamera.h"
-#include "Input.h"
-#include "WinApp.h"
-#include "DirectXCommon.h"
-#include"Logger.h"
-#include "D3DResourceLeakChecker.h"
+#include "engine/math/affine.h"
+#include "engine/3d/DebugCamera.h"
+#include "engine/io/Input.h"
+#include "engine/base/WinApp.h"
+#include "engine/base/DirectXCommon.h"
+#include "engine/base/Logger.h"
+#include "engine/base/D3DResourceLeakChecker.h"
 
 
 #ifdef USE_IMGUI
@@ -264,7 +264,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	//WindowsAPI初期化処理
 	//
 
-	SetUnhandledExceptionFilter(ExportDump);
+	//クラッシュしたときDumpsというファイルを生成する
+	//SetUnhandledExceptionFilter(ExportDump);
 
 	//WinAppのポインタ
 	WinApp* winApp = nullptr;
@@ -411,10 +412,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	//三角形の中を塗りつぶす
 	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 	// Shaderをコンパイルする
-	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = dxCommon->CompileShader(L"Object3D.VS.hlsl", L"vs_6_0");
+	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = dxCommon->CompileShader(L"resources/shaders/Object3D.VS.hlsl", L"vs_6_0");
 	assert(vertexShaderBlob != nullptr);
 
-	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = dxCommon->CompileShader(L"Object3D.PS.hlsl", L"ps_6_0");
+	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = dxCommon->CompileShader(L"resources/shaders/Object3D.PS.hlsl", L"ps_6_0");
 	assert(pixelShaderBlob != nullptr);
 
 	//
@@ -600,7 +601,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			//ゲームループを抜ける
 			break;
 		}
-		
+
 #ifdef USE_IMGUI
 		// ImGuiにフレームが始まることを伝える
 		ImGui_ImplDX12_NewFrame();
@@ -652,13 +653,13 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 #endif
 
-//DirectX毎フレーム処理
+		//DirectX毎フレーム処理
 
-//描画前処理
+		//描画前処理
 
 		dxCommon->PreDraw();
 
-		
+
 		// RootSignatureを設定。PSOに設定しているけど別途設定が必要
 		dxCommon->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
 		dxCommon->GetCommandList()->SetPipelineState(graphicsPipelineStateNormal.Get());
@@ -739,7 +740,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());
 #endif
 
-//画面入れ替え
+		//画面入れ替え
 
 		dxCommon->PostDraw();
 

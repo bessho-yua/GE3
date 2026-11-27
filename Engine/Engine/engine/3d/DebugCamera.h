@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "affine.h"
+#include "../math/affine.h"
 
 class DebugCamera
 {
