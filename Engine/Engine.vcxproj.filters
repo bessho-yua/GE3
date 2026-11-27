@@ -16,16 +16,72 @@
     <Filter Include="imgui">
       <UniqueIdentifier>{f41cb67a-24af-4504-94c8-a02a2c53e20b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="シェーダーファイル">
+      <UniqueIdentifier>{e9c0f82b-bf33-409d-aaed-230e3d9d8418}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\engine">
+      <UniqueIdentifier>{7413ea2b-528b-4445-b992-acb8d53ab90d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\engine\2d">
+      <UniqueIdentifier>{51c76a6d-c844-4030-a0c2-c5d35b2d8093}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\engine\3d">
+      <UniqueIdentifier>{b45445f0-2e6f-416c-bdeb-87b65c92ce3a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\engine\base">
+      <UniqueIdentifier>{82eb7bc5-5db6-49c1-a12f-f15bcbfd3e20}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\engine\math">
+      <UniqueIdentifier>{aa1349b5-cc95-4a1c-bc33-5e4696c5a239}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\engine\io">
+      <UniqueIdentifier>{6fb53553-2e9a-4db5-81dd-65895fb8901d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\engine\audio">
+      <UniqueIdentifier>{e37c58ca-accc-489e-bfa0-d8df534d3b99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\engine\scene">
+      <UniqueIdentifier>{5a8e3663-c384-4c3d-a6dd-90b619912ee4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\application">
+      <UniqueIdentifier>{0f0b98eb-64c8-433b-a4ec-63c371803c95}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\engine">
+      <UniqueIdentifier>{28593a22-b88a-4291-a451-a344566b3950}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\engine\2d">
+      <UniqueIdentifier>{38d69b1f-417c-403b-b086-07c0b4191d2c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\engine\3d">
+      <UniqueIdentifier>{321a5728-6350-4983-9469-335ccb8d1b1a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\engine\base">
+      <UniqueIdentifier>{5be96fd7-3087-449c-8069-c58c2dc4ee57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\engine\math">
+      <UniqueIdentifier>{afb11474-ebfb-44d1-84f0-9365a678cb4d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\engine\io">
+      <UniqueIdentifier>{2e8a470b-3122-43b8-b26a-5243d6ab1389}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\engine\audio">
+      <UniqueIdentifier>{a5810cfd-4990-47e3-84f9-85c749ddaf08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\engine\scene">
+      <UniqueIdentifier>{38bb60e2-907b-4e8a-854e-27f4f7fd65ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\application">
+      <UniqueIdentifier>{4718b8f7-180d-4f77-aafd-73f01976eed0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include=".editorconfig" />
-    <None Include="resources\shaders\Object3d.hlsli" />
+    <None Include="resources\shaders\Object3d.hlsli">
+      <Filter>シェーダーファイル</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine\main.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\engine\math\affine.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="externals\imgui\imgui.cpp">
@@ -49,36 +105,40 @@
     <ClCompile Include="externals\imgui\imgui_widgets.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\engine\math\affine.cpp">
+      <Filter>ソース ファイル\engine\math</Filter>
+    </ClCompile>
     <ClCompile Include="Engine\engine\3d\DebugCamera.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ソース ファイル\engine\3d</Filter>
     </ClCompile>
     <ClCompile Include="Engine\engine\io\Input.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\engine\base\WinApp.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\engine\base\DirectXCommon.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\engine\base\Logger.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\engine\base\StringUtility.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ソース ファイル\engine\io</Filter>
     </ClCompile>
     <ClCompile Include="Engine\engine\base\D3DResourceLeakChecker.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ソース ファイル\engine\base</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\engine\base\DirectXCommon.cpp">
+      <Filter>ソース ファイル\engine\base</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\engine\base\Logger.cpp">
+      <Filter>ソース ファイル\engine\base</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\engine\base\StringUtility.cpp">
+      <Filter>ソース ファイル\engine\base</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\engine\base\WinApp.cpp">
+      <Filter>ソース ファイル\engine\base</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="resources\shaders\Object3d.VS.hlsl" />
-    <FxCompile Include="resources\shaders\Object3d.PS.hlsl" />
+    <FxCompile Include="resources\shaders\Object3d.PS.hlsl">
+      <Filter>シェーダーファイル</Filter>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\Object3d.VS.hlsl">
+      <Filter>シェーダーファイル</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Engine\engine\math\affine.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="externals\imgui\imconfig.h">
       <Filter>imgui</Filter>
     </ClInclude>
@@ -103,26 +163,29 @@
     <ClInclude Include="externals\imgui\imstb_truetype.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\engine\3d\DebugCamera.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="Engine\engine\math\affine.h">
+      <Filter>ヘッダー ファイル\engine\math</Filter>
     </ClInclude>
     <ClInclude Include="Engine\engine\io\Input.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\engine\io</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\engine\base\WinApp.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\engine\base\DirectXCommon.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\engine\base\Logger.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\engine\base\StringUtility.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="Engine\engine\3d\DebugCamera.h">
+      <Filter>ヘッダー ファイル\engine\3d</Filter>
     </ClInclude>
     <ClInclude Include="Engine\engine\base\D3DResourceLeakChecker.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\engine\base</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\engine\base\DirectXCommon.h">
+      <Filter>ヘッダー ファイル\engine\base</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\engine\base\Logger.h">
+      <Filter>ヘッダー ファイル\engine\base</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\engine\base\StringUtility.h">
+      <Filter>ヘッダー ファイル\engine\base</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\engine\base\WinApp.h">
+      <Filter>ヘッダー ファイル\engine\base</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
